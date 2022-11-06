@@ -9,6 +9,9 @@ namespace SS14.Issues.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            
+            migrationBuilder.Sql("CREATE EXTENSION IF NOT EXISTS pg_trgm;");
+            
             migrationBuilder.CreateTable(
                 name: "RepoConfigs",
                 columns: table => new
@@ -48,7 +51,6 @@ namespace SS14.Issues.Migrations
                         "Id"
                     );
                 });
-            migrationBuilder.Sql("CREATE EXTENSION IF NOT EXISTS pg_trgm");
             migrationBuilder.Sql("CREATE INDEX \"SyncedIssueTemplate_trgm_idx\" ON \"SyncedIssueTemplate\" USING GIST (\"Title\" gist_trgm_ops);");
         }
 

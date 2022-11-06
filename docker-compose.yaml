@@ -6,6 +6,7 @@ services:
       dockerfile: SS14.Issues/Dockerfile
     volumes:
       - ./appsettings.yaml:/app/appsettings.yaml
+      - ./private-key.pem:/app/private-key.pem
     ports:
       - '<port>':'80'
   issues_database:
@@ -14,3 +15,4 @@ services:
       - POSTGRES_PASSWORD=<password>
     volumes:
       - ./data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql

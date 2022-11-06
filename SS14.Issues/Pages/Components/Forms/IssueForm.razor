@@ -105,7 +105,7 @@
         if (!_fileId.HasValue)
         {
             _fileId = Guid.NewGuid();
-            Issue.Message += $"\n### Screenshot:\n![image]({Navigator.BaseUri}{FileUploadService.GetUploadPath()}/{_fileId})";
+            Issue.Message += $"\n### Screenshot:\n![image]({Navigator.BaseUri}{FileUploadService.GetUploadPath()}/{FileUploadService.GetFileName(_fileId.Value, args.File.ContentType)})";
         }
 
         _file = args.File;

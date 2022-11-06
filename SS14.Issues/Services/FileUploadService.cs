@@ -29,7 +29,7 @@ public sealed class FileUploadService
         var uploadPath = GetUploadPath();
         var fileName = GetFileName(fileId, browserFile.ContentType);
         
-        await using FileStream fs = new( $"wwwroot/{uploadPath}/", FileMode.Create);
+        await using FileStream fs = new( $"wwwroot/{uploadPath}/{fileName}", FileMode.Create);
         await browserFile.OpenReadStream((1024 * 10000)).CopyToAsync(fs);
         Log.Information("Saved a file {filename}", fs.Name);
     }
