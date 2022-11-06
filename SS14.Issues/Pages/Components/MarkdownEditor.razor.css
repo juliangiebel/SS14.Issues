@@ -1,0 +1,43 @@
+﻿.markdown-input {
+    --tabnav-height: 40px;
+}
+
+.markdown-input .tabnav {
+    height: var(--tabnav-height);
+    margin-bottom: 0;
+    border-radius: 6px 6px 0 0;
+    border: 1px solid var(--color-border-default);
+    background-color: var(--color-canvas-subtle);
+}
+
+.markdown-input:focus-within .tabnav {
+    border-color: var(--color-accent-fg);
+    border-bottom-color: var(--color-border-default);
+}
+
+.markdown-input .tabnav .tabnav-tab {
+    border-top: none;
+}
+
+.markdown-input .tabnav .tabnav-tab:first-of-type {
+    border-top: none;
+    border-left: none;
+}
+
+.markdown-input .toolbar {
+    height: 39px;
+    display: flex;
+}
+
+.markdown-input .form-group-body {
+    height: calc(100% - var(--tabnav-height));
+}
+
+.markdown-preview {
+    min-height: 200px;
+    border-radius: 0 0 6px 6px;
+    border: 1px solid var(--color-border-default);
+    border-top: none;
+    height: calc(100% - var(--tabnav-height));
+    padding: 16px;
+}

@@ -1,0 +1,78 @@
+﻿@page "/fetchdata"
+
+<PageTitle>Installations</PageTitle>
+
+@using Octokit
+@using SS14.Issues.Services
+@inject GithubApiService GithubApiService
+
+<h1>Weather forecast</h1>
+
+<p>This component demonstrates fetching data from a service.</p>
+
+@if (_installations == null || _repositories == null)
+{
+    <p>
+        <em>Loading...</em>
+    </p>
+}
+else
+{
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Account name</th>
+            <th>App Id</th>
+            <th>Link</th>
+            <th>Installation Id</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var installation in _installations)
+        {
+            <tr>
+                <td>@installation.Account.Login</td>
+                <td>@installation.AppId</td>
+                <td><a href="@installation.HtmlUrl">@installation.HtmlUrl</a></td>
+                <td>@installation.Id</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Full Name</th>
+            <th>Link</th>
+            <th>Issue Id</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var repository in _repositories.Repositories)
+        {
+            <tr>
+                <td>@repository.Name</td>
+                <td>@repository.FullName</td>
+                <td><a href="@repository.Url">@repository.Url</a></td>
+                <td>@repository.Id</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@code {
+    private IReadOnlyList<Installation>? _installations;
+    private RepositoriesResponse? _repositories;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _installations = await GithubApiService.GetInstallations();
+        if (_installations is {Count: > 0 })
+        {
+            _repositories = await GithubApiService.GetRepositories(_installations[0].Id);
+        }
+    }
+
+}

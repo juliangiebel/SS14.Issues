@@ -1,0 +1,77 @@
+﻿@using Serilog
+@using SS14.Issues.Pages.Components
+@inherits LayoutComponentBase
+@inject IJSRuntime JSRuntime;
+
+<PageTitle>SS14.Issues</PageTitle>
+
+<div class="page">
+    <div class="Header header-fixed-height">
+        <div class="Header-item f4 d-flex flex-items-center">
+            <img class="header-icon" src="https://spacestation14.io/images/main/icon.svg" alt="">
+            <span class="Header-link ml-1">SS14.Issues</span>
+        </div>
+        <div class="Header-item--full"></div>
+            <LoginDisplay/>
+    </div>
+    <div class="Layout Layout--divided height-full-fixed-header">
+        <div class="Layout-sidebar Layout--sidebar-narrow">
+            <NavMenu/>
+        </div>
+        <div class="Layout-divider"></div>
+        <div class="Layout-main">
+            <main class="height-full-fixed-header-footer">
+                <AuthorizeView Roles="Admin">
+                    <NotAuthorized>
+                        @if (context.User.Identity?.IsAuthenticated ?? false)
+                        {
+                            <h1>You don't have permission to view this page</h1>
+                        }
+                        else
+                        {
+                            <h1>Login Required</h1>
+                        }
+                    </NotAuthorized>
+                    <Authorized>
+                        @Body
+                    </Authorized>
+                </AuthorizeView>
+            </main>
+            <div class="width-full footer-gradient pt-4">
+                <footer class="footer width-full container-lg p-responsive footer-fixed-height">
+                    <nav class="col-12 col-lg-8 pb-2 f6 mb-2 color-fg-muted width-full">
+                        <ul class="list-style-none d-flex flex-wrap col-12 flex-justify-center flex-lg-justify-between mb-2 mb-lg-0">
+                            <li class="mr-3 mr-lg-0">
+                                <a href="#">Imprint</a>
+                            </li>
+                            <li class="mr-3 mr-lg-0">
+                                <a href="#">Privacy</a>
+                            </li>
+                            <li class="mr-3 mr-lg-0">
+                                <a href="https://github.com/juliangiebel/SS14.Issues">Github</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </footer>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<Toast />
+
+@code
+{
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("populateOcticons");
+        }
+        catch (Exception e)
+        {
+            Log.Error(e, "Failed to populate octicons");
+        }
+    }
+}

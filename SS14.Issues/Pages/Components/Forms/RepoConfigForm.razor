@@ -1,0 +1,138 @@
+﻿@using Octokit
+@using SS14.Issues.Data.Model
+@using SS14.Issues.Services
+@inject GithubApiService GithubApiService
+
+<EditForm Model="@RepoConfig" OnValidSubmit="@HandleValidSubmit" class="grid-form grid-form-col-2">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <h3 class="grid-item-span">Installation</h3>
+    <div class="form-group">
+        <div class="form-group-header">
+            <label for="installation-select">Account</label>
+        </div>
+        <div class="form-group-body">
+            @if (_installations == null)
+            {
+                <div class="form-select form-input-wide" disabled>
+                    <span>Loading</span><span class="AnimatedEllipsis"></span>
+                </div>
+            }
+            else
+            {
+                <InputSelect TValue="int" class="form-select form-input-wide" id="installation-select" @oninput="@HandleInstallationSelect" @bind-Value="RepoConfig.GhInstallationId">
+                    @foreach (var installation in _installations)
+                    {
+                        <option value=@installation.Id>@installation.Account.Login</option>
+                    }
+                </InputSelect>
+            }
+        </div>
+    </div>
+    <div class="form-group">
+        @if (RepoConfig.GhInstallationId != default)
+        {
+            <div class="form-group-header">
+                <label for="repo-select">Repository</label>
+            </div>
+            <div class="form-group-body">
+                @if (_repositories == null)
+                {
+
+                    <div class="form-select form-input-wide" disabled>
+                        <span>Loading</span><span class="AnimatedEllipsis"></span>
+                    </div>
+
+                }
+                else
+                {
+                    <InputSelect TValue="int" class="form-select form-input-wide" id="installation-select" @oninput="@HandleRepositorySelect" @bind-Value="RepoConfig.GhRepoId">
+                        @foreach (var repository in _repositories.Repositories)
+                        {
+                            <option value="@repository.Id">@repository.Name</option>
+                        }
+                    </InputSelect>
+                }
+            </div>
+        }
+    </div>
+    @if (RepoConfig.GhRepoId != default)
+    {
+        <h3 class="grid-item-span mt-4">Details</h3>
+        <div class="form-group">
+            <div class="form-group-header">
+                <label for="name-input">Name</label>
+            </div>
+            <div class="form-group-body">
+                <InputText class="form-control" type="text" id="name-input" @bind-Value="RepoConfig.Name"/>
+            </div>
+        </div>
+        <div class="form-group ">
+            <div class="form-group-header">
+                <label for="name-input">Slug</label>
+            </div>
+            <div class="form-group-body">
+                <InputText class="form-control" type="text" id="name-input" @bind-Value="RepoConfig.Slug"/>
+            </div>
+        </div>
+        <div class="form-checkbox grid-item-span">
+            <label>
+                <InputCheckbox type="checkbox" aria-describedby="help-text-for-checkbox" @bind-Value="RepoConfig.AuthRequired"/>
+                Require Login
+            </label>
+            <p class="note" id="help-text-for-checkbox">
+                Requires users to login using their <strong>Space Station 14</strong> account before submitting an issue.
+            </p>
+        </div>
+    }
+    <div class="form-actions grid-item-span mt-4">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button type="button" id="mockup-close" class="btn">Cancel</button>
+    </div>
+</EditForm>
+
+
+@code
+{
+    [Parameter]
+    public RepoConfig RepoConfig { get; set; } = new();
+
+    [Parameter]
+    public Action<RepoConfig> OnFormSubmit { get; set; } = _ => {};
+
+    IReadOnlyList<Installation>? _installations;
+    private RepositoriesResponse? _repositories;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _installations = await GithubApiService.GetInstallations();
+
+        if (RepoConfig.GhInstallationId != default)
+        {
+            _repositories = await GithubApiService.GetRepositories(RepoConfig.GhInstallationId);
+        }
+    }
+    
+    private void HandleValidSubmit()
+    {
+        OnFormSubmit(RepoConfig);
+    }
+
+    private async void HandleInstallationSelect(ChangeEventArgs args)
+    {
+        if (_installations is not {Count: > 0 } || args.Value is not string value || !int.TryParse(value, out var installationId))
+            return;
+        
+        _repositories = await GithubApiService.GetRepositories(installationId);
+        StateHasChanged();
+    }
+
+    private void HandleRepositorySelect(ChangeEventArgs args)
+    {
+        if (_repositories is not {TotalCount: > 0} || args.Value is not string value || !int.TryParse(value, out var repoId))
+            return;
+
+        var repository = _repositories.Repositories.First(repo => repo.Id == repoId);
+        RepoConfig.GhRepoSearchKey = repository.FullName;
+    }
+}

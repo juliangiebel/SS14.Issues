@@ -1,0 +1,74 @@
+﻿@using SS14.Issues.Data.Model
+@using Markdig
+@using Microsoft.EntityFrameworkCore
+@using SS14.Issues.Data
+@inject ApplicationDbContext DbContext
+
+<div class="Box" style="height: 80vh; overflow-y: auto; overflow-x: hidden;">
+    <div class="Box-header">
+        <h3>Similiar issues <span class="Counter Counter--gray">@(_syncedIssues?.Count ?? 0)</span></h3>
+    </div>
+    @if (_syncedIssues == null || _syncedIssues.Count == 0)
+    {
+        <div class="Box-body">
+            <div class="blankslate">
+                <h4 class="blankslate-heading">Your issue is unique!</h4>
+                <p>Fill in the issues title to get similiar issues displayed here.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <ul>
+            @foreach (var issue in _syncedIssues)
+            {
+                <li class="Box-row">
+                    <div class=" d-flex f3 flex-items-baseline">
+                        @if (issue.Status == "open")
+                        {
+                            <a class="d-flex flex-items-baseline color-fg-open" href="@issue.Url" target="_blank">
+                                <svg class="octicon mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
+                                    <path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"></path>
+                                    <path fill-rule="evenodd" d="M8 0a8 8 0 100 16A8 8 0 008 0zM1.5 8a6.5 6.5 0 1113 0 6.5 6.5 0 01-13 0z"></path>
+                                </svg>
+                                <div class="text-bold mr-4">#@issue.Number</div>
+                            </a>
+                        }
+                        else
+                        {
+                            <a class="d-flex flex-items-baseline color-fg-done" href="@issue.Url" target="_blank">
+                                <svg class="octicon mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
+                                    <path d="M11.28 6.78a.75.75 0 00-1.06-1.06L7.25 8.69 5.78 7.22a.75.75 0 00-1.06 1.06l2 2a.75.75 0 001.06 0l3.5-3.5z"></path>
+                                    <path fill-rule="evenodd" d="M16 8A8 8 0 110 8a8 8 0 0116 0zm-1.5 0a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0z"></path>
+                                </svg>
+                                <div class="text-bold mr-4">#@issue.Number</div>
+                            </a>
+                        }
+                        <div>@issue.Title</div>
+                    </div>
+                    <div class="issue-excerpt markdown-body border-top color-border-subtle p-3 mt-2 f5">
+                        @((MarkupString) Markdown.ToHtml(issue.Excerpt ?? "", _pipeline))
+                    </div>
+                </li>
+            }
+        </ul>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string RepoKey { get; set; }
+    
+    private MarkdownPipeline _pipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
+
+    private List<SyncedIssue>? _syncedIssues;
+
+    public async Task UpdateSearch(string searchText)
+    {
+        if (string.IsNullOrWhiteSpace(RepoKey))
+            return;
+        
+        _syncedIssues = await DbContext.SearchIssues(RepoKey, searchText, 5).ToListAsync();
+        StateHasChanged();
+    }
+}

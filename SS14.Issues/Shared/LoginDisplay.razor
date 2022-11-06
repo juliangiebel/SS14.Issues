@@ -1,0 +1,9 @@
+﻿<AuthorizeView>
+    <Authorized>
+        <div class="Header-item"><a href="auth/logout" class="Header-link">Hello, @context.User.Identity?.Name!</a></div>
+        <div class="Header-item"><a href="auth/logout" class="Header-link">Log out</a></div>
+    </Authorized>
+    <NotAuthorized>
+        <div class="Header-item"><a href="auth/login?redirectUri=/" class="Header-link">Log in</a></div>
+    </NotAuthorized>
+</AuthorizeView>

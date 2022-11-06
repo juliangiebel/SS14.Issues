@@ -1,0 +1,16 @@
+version: '3.3'
+services:
+  ss14issues:
+    build:
+      context: ./
+      dockerfile: SS14.Issues/Dockerfile
+    volumes:
+      - ./appsettings.yaml:/app/appsettings.yaml
+    ports:
+      - '<port>':'80'
+  issues_database:
+    image: postgres:latest
+    environment:
+      - POSTGRES_PASSWORD=<password>
+    volumes:
+      - ./data:/var/lib/postgresql/data

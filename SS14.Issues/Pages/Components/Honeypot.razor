@@ -1,0 +1,12 @@
+﻿
+<div class="wrap">
+    <div class="move">
+        <label for="sku-input"></label>
+        <input type="text" name="sku" id="sku-input" tabindex="-1" @bind="@_skuValue">
+    </div>
+</div>
+
+@code {
+    public bool HoneypotFailed => !string.IsNullOrEmpty(_skuValue);
+    private string? _skuValue;
+}

@@ -1,0 +1,38 @@
+﻿@page "/reported/{Slug}"
+@using SS14.Issues.Data.Model
+@using Microsoft.EntityFrameworkCore
+@using SS14.Issues.Data
+@layout StandaloneLayout
+
+@inject NavigationManager Navigator
+@inject ApplicationDbContext DbContext
+
+<header class="Header color-bg-default color-fg-default flex-justify-between">
+    <div class="Header-item">
+        <img class="header-icon" src="https://spacestation14.io/images/main/icon.svg" alt="">
+    </div>
+    <div></div>
+</header>
+<main style="min-height: 85vh">
+    <div class="blankslate">
+        <h3 class="blankslate-heading">Thank you for reporting an issue!</h3>
+        <p>Your issue was created on the <a href="https://github.com/@_config?.GhRepoSearchKey" target="_blank">@_config?.Name</a> github repository.</p>
+    </div>
+</main>
+
+@code
+{
+    [Parameter]
+    public string? Slug { get; set; }
+    private RepoConfig? _config;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Slug))
+            Navigator.NavigateTo("/");
+
+        _config = await DbContext.RepoConfigs.Where(c => c.Slug == Slug).FirstOrDefaultAsync();
+        if (_config is null || !_config.Active)
+            Navigator.NavigateTo("/");
+    }
+}

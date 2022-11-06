@@ -1,0 +1,11 @@
+.page {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.footer-gradient {
+    margin-top: -8px;
+    background: rgb(255,255,255);
+    background: linear-gradient(0deg, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 79%, rgba(255,255,255,0.710504270067402) 85%, rgba(255,255,255,0.48921575466123945) 91%, rgba(255,255,255,0) 96%);
+}

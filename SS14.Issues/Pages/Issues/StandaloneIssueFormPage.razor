@@ -1,0 +1,84 @@
+﻿@page "/report/{Slug}"
+@layout StandaloneLayout
+
+@using SS14.Issues.Pages.Components
+@using SS14.Issues.Pages.Components.Forms
+@using SS14.Issues.Data
+@using SS14.Issues.Data.Model
+@using Microsoft.EntityFrameworkCore
+@using SS14.Issues.Services
+@inject NavigationManager Navigator
+@inject ApplicationDbContext DbContext
+@inject GithubApiService GithubApiService
+
+<header class="Header color-bg-default color-fg-default flex-justify-between">
+    <div class="Header-item">
+        <img class="header-icon" src="https://spacestation14.io/images/main/icon.svg" alt="">
+    </div>
+    <div class="Header-item h1 flex-self-center">Report an issue for: @_config?.Name</div>
+    <div></div>
+</header>
+<div class="d-flex flex-column flex-lg-row px-6 pt-3" style="min-height: 83vh;">
+    @if (_config?.AuthRequired ?? true)
+    {
+        <AuthorizeView>
+            <Authorized>
+                <main class="flex-self-stretch mr-6 mb-4 mb-lg-0 width-sm-full issue-form-layout-left">
+                    <IssueForm RedirectToSuccessPage="true" RedirectSlug="@Slug" OnTitleChange="async e => await OnTitleChanged(e)" OnFormSubmit="@OnFormSubmit"></IssueForm>
+                </main>
+                <div class="issue-form-layout-right">
+                    <IssueSearchDisplay @ref="@_issueSearchDisplay" RepoKey="@_config?.GhRepoSearchKey"></IssueSearchDisplay>
+                </div>
+
+            </Authorized>
+            <NotAuthorized>
+                <main class="flex-self-center mb-4 mb-lg-0 width-sm-full issue-form-layout-full">
+                    <h1 style="text-align: center">Please sign in to report an issue: <a href="auth/login?redirectUri=@Navigator.Uri">Login</a></h1>
+                </main>
+            </NotAuthorized>
+        </AuthorizeView>
+    }
+    else
+    {
+        <main class="flex-self-stretch mr-6 mb-4 mb-lg-0 width-sm-full issue-form-layout-left">
+            <IssueForm RedirectToSuccessPage="true" RedirectSlug="@Slug" OnTitleChange="async e => await OnTitleChanged(e)" OnFormSubmit="@OnFormSubmit"></IssueForm>
+        </main>
+        <div class="issue-form-layout-right">
+            <IssueSearchDisplay @ref="@_issueSearchDisplay" RepoKey="@_config?.GhRepoSearchKey"></IssueSearchDisplay>
+        </div>
+    }
+</div>
+
+@code
+{
+    [Parameter]
+    public string? Slug { get; set; }
+
+    private RepoConfig? _config;
+    private IssueSearchDisplay _issueSearchDisplay;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Slug))
+            Navigator.NavigateTo("/");
+
+        _config = await DbContext.RepoConfigs.Where(c => c.Slug == Slug).FirstOrDefaultAsync();
+        if (_config is null || !_config.Active)
+            Navigator.NavigateTo("/");
+    }
+
+    private async Task OnTitleChanged(string title)
+    {
+        await _issueSearchDisplay?.UpdateSearch(title)!;
+        StateHasChanged();
+    }
+
+    private void OnFormSubmit(IssueCreationParameters args)
+    {
+        if (_config == null)
+            return;
+        
+        GithubApiService.CreateIssue(_config.GhInstallationId, _config.GhRepoId, args);
+    }
+}
+

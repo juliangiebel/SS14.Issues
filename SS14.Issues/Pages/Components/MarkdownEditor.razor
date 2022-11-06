@@ -1,0 +1,41 @@
+﻿@using Serilog
+@using SS14.Issues.Services
+@inherits InputBase<string?>
+@inject IJSRuntime JsRuntime
+@inject GithubApiService GithubApiService
+
+<div class="form-group markdown-input markdown-input-wrapper">
+    <div class="form-group-header">
+        <label for="markdown-textarea">Comment</label>
+    </div>
+    <div class="form-group-body">
+        <div class="tabnav">
+            <div class="toolbar mr-2 float-right">
+                <button class="btn-octicon icon btn-sm float-right" type="button" data-icon="heading" @onclick="async () => await InsertTemplate(HeadingTemplate)" aria-label="Heading icon"></button>
+                <button class="btn-octicon icon btn-sm float-right" type="button" data-icon="bold" @onclick="async () => await InsertTemplate(BoldTemplate)" aria-label="Bold icon"></button>
+                <button class="btn-octicon icon btn-sm float-right" type="button" data-icon="italic" @onclick="async () => await InsertTemplate(ItalicTemplate)" aria-label="Italic icon"></button>
+                <button class="btn-octicon icon btn-sm float-right" type="button" data-icon="quote" @onclick="async () => await InsertTemplate(QuoteTemplate)" aria-label="Quote icon"></button>
+                <button class="btn-octicon icon btn-sm float-right" type="button" data-icon="code" @onclick="async () => await InsertTemplate(CodeTemplate)" aria-label="Code icon"></button>
+                <button class="btn-octicon icon btn-sm float-right" type="button" data-icon="link" @onclick="async () => await InsertTemplate(LinkTemplate)" aria-label="Link icon"></button>
+                <button class="btn-octicon icon btn-sm float-right" type="button" data-icon="list-unordered" @onclick="async () => await InsertTemplate(UnorderedListTemplate)" aria-label="Unordered list icon"></button>
+                <button class="btn-octicon icon btn-sm float-right" type="button" data-icon="list-ordered" @onclick="async () => await InsertTemplate(OrderedListTemplate)" aria-label="Ordered list icon"></button>
+                <button class="btn-octicon icon btn-sm float-right" type="button" data-icon="tasklist" @onclick="async () => await InsertTemplate(TasksTemplate)" aria-label="Tasklist icon"></button>
+            </div>
+
+            <nav class="tabnav-tabs">
+                <button type="button" class="tabnav-tab edit-button" aria-current="@(_showPreview ? false : "page")" @onclick="@OnWriteButtonClick">Write</button>
+                <button type="button" class="tabnav-tab preview-button" aria-current="@(_showPreview ? "page" : false)" @onclick="@OnPreviewButtonClick">Preview</button>
+            </nav>
+        </div>
+        @if (!_showPreview)
+        {
+            <InputTextArea class="form-control markdown-textarea" @ref="_markdownInput" @onmouseup="@OnMouseUp" @onkeyup="@OnKeyUp" @oninput="@OnInput" Value="@CurrentValue" ValueExpression="@(() => CurrentValue)" ValueChanged="@OnValueChange" id="markdown-textarea"></InputTextArea>
+        }
+        else
+        {
+            <div class="markdown-preview width-full markdown-body">
+                @_renderedPreview
+            </div>
+        }
+    </div>
+</div>

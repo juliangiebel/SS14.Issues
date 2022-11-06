@@ -1,0 +1,122 @@
+﻿@using SS14.Issues.Data.Model
+@using Octokit
+@using Serilog
+@using SS14.Issues.Services
+@using FileMode = System.IO.FileMode
+@inject NavigationManager Navigator
+@inject FileUploadService FileUploadService
+
+<div class="Box">
+    <div class="Box-header">
+        <h3>
+            Create
+            <select class="form-control" name="issue-template-select" id="issue-template-select">
+                <option value="bug" selected>Issue</option>
+                <option value="feature">Feature Request</option>
+            </select>
+        </h3>
+    </div>
+    <EditForm Model="Issue" OnValidSubmit="HandleValidSubmit">
+        <div class="Box-body">
+            <DataAnnotationsValidator/>
+            <ValidationSummary/>
+            <Honeypot @ref="_honeypot"/>
+            <div class="form-group">
+                <div class="form-group-header">
+                    <label for="title-input">Title</label>
+                </div>
+                <div class="form-group-body">
+                    <InputText @bind-Value="@Issue.Title" @oninput="@OnTitleInputChange" class="form-control input-block input-lg" type="text" id="title-input"/>
+                </div>
+            </div>
+
+            <MarkdownEditor @bind-Value="@Issue.Message"></MarkdownEditor>
+            <AuthorizeView Context="authContext">
+                <Authorized>
+                    <div class="form-group">
+                        <div class="form-group-header">
+                            <label for="image-upload">Upload Screenshot</label>
+                        </div>
+                        <div class="form-group-body">
+                            <InputFile class="form-control" type="file" id="image-upload" name="image-upload" OnChange="OnFileUpload" accept=".jpg, .jpeg, .png"/>
+                        </div>
+                    </div>
+                </Authorized>
+                <NotAuthorized>
+                    <div class="form-group">
+                        <div class="form-group-header">
+                            <label for="image-upload">Upload Screenshot</label>
+                        </div>
+                        <div class="form-group-body">
+                            <span>Login to upload a screenshot: </span><a href="auth/login?redirectUri=@Navigator.Uri">Login</a>
+                        </div>
+                    </div>
+                </NotAuthorized>
+            </AuthorizeView>
+        </div>
+        <div class="Box-footer text-right">
+            <button class="btn btn-primary" type="submit" value="Submit">Submit</button>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    public IssueCreationParameters Issue { get; set; } = new();
+
+    [Parameter]
+    public Action<IssueCreationParameters> OnFormSubmit { get; set; } = _ => { };
+
+    [Parameter]
+    public Action<string> OnTitleChange { get; set; } = _ => { };
+
+    [Parameter]
+    public bool RedirectToSuccessPage { get; set; } = false;
+    
+    [Parameter]
+    public string? RedirectSlug { get; set; }
+
+    private IBrowserFile? _file;
+
+    private Guid? _fileId;
+
+    private Honeypot _honeypot;
+
+    private async Task HandleValidSubmit()
+    {
+        if (_honeypot.HoneypotFailed)
+            return;
+
+        OnFormSubmit.Invoke(Issue);
+        Issue = new IssueCreationParameters();
+
+        if (_fileId.HasValue && _file != null)
+        {
+            await FileUploadService.UploadFile(_file, _fileId.Value);
+        }
+
+        StateHasChanged();
+
+        if (RedirectToSuccessPage)
+            Navigator.NavigateTo($"/reported/{RedirectSlug ?? ""}");
+    }
+
+    private void OnFileUpload(InputFileChangeEventArgs args)
+    {
+        if (!_fileId.HasValue)
+        {
+            _fileId = Guid.NewGuid();
+            Issue.Message += $"\n### Screenshot:\n![image]({Navigator.BaseUri}{FileUploadService.GetUploadPath()}/{_fileId})";
+        }
+
+        _file = args.File;
+    }
+
+    private void OnTitleInputChange(ChangeEventArgs args)
+    {
+        if (args.Value is not string title)
+            return;
+
+        OnTitleChange.Invoke(title);
+    }
+
+}

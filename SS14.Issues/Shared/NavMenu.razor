@@ -1,0 +1,60 @@
+﻿<div class="d-flex flex-column height-full">
+    <nav>
+        <ul class="ActionList">
+            <AuthorizeView Roles="Admin">
+                <Authorized>
+                    <li class="ActionList-sectionDivider">
+                        <h3 class="ActionList-sectionDivider-title" id="nav-group-issues">
+                            Issues
+                        </h3>
+                    </li>
+                    <NavLink class="ActionList-item nav-item" ActiveClass="ActionList-item--navActive" href="/issues/form">
+                        <span class="ActionList-content ActionList-content--sizeMedium">
+                            <span class="ActionList-item-visual ActionList-item-visual--leading icon" data-icon="issue-closed"></span>
+                            <span class="ActionList-item-label">New Issue</span>
+                        </span>
+                    </NavLink>
+                    @*<li class="ActionList-item">
+                        <span class="ActionList-content ActionList-content--sizeMedium">
+                            <span class="ActionList-item-visual ActionList-item-visual--leading icon" data-icon="search"></span>
+                            <span class="ActionList-item-label">Search Issues</span>
+                        </span>
+                    </li>*@
+                    <li class="ActionList-sectionDivider">
+                        <h3 class="ActionList-sectionDivider-title" id="nav-group-administration">
+                            Administration
+                        </h3>
+                    </li>
+                    <NavLink class="ActionList-item nav-item" href="/" ActiveClass="ActionList-item--navActive" Match="NavLinkMatch.All">
+                        <span class="ActionList-content ActionList-content--sizeMedium">
+                            <span class="ActionList-item-visual ActionList-item-visual--leading icon" data-icon="info"></span>
+                            <span class="ActionList-item-label"> App Info </span>
+                        </span>
+                    </NavLink>
+                    <NavLink class="ActionList-item nav-item" ActiveClass="ActionList-item--navActive" href="repositorysetup">
+                        <span class="ActionList-content ActionList-content--sizeMedium">
+                            <span class="ActionList-item-visual ActionList-item-visual--leading icon" data-icon="gear"></span>
+                            <span class="ActionList-item-label">Repository Configuration</span>
+                        </span>
+                    </NavLink>
+                    @*<NavLink class="ActionList-item nav-item" ActiveClass="ActionList-item--navActive" href="counter">
+                        <span class="ActionList-content ActionList-content--sizeMedium">
+                            <span class="ActionList-item-visual ActionList-item-visual--leading icon" data-icon="comment"></span>
+                            <span class="ActionList-item-label"> Templates </span>
+                        </span>
+                    </NavLink>
+                    <NavLink class="ActionList-item nav-item" ActiveClass="ActionList-item--navActive" href="fetchdata">
+                        <span class="ActionList-content ActionList-content--sizeMedium">
+                            <span class="ActionList-item-visual ActionList-item-visual--leading icon" data-icon="key"></span>
+                            <span class="ActionList-item-label"> Api Keys </span>
+                        </span>
+                    </NavLink>*@
+                </Authorized>
+            </AuthorizeView>
+        </ul>
+    </nav>
+</div>
+
+@code {
+
+}

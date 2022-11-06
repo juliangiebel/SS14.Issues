@@ -1,0 +1,54 @@
+﻿@using Serilog
+@inherits LayoutComponentBase
+@inject IJSRuntime JSRuntime;
+@inject NavigationManager Navigator
+
+<PageTitle>SS14.Issues</PageTitle>
+
+<HeadContent>
+    <link rel="stylesheet" href="css/normalize.css">
+    <link rel="stylesheet" href="css/primer/primer.css">
+</HeadContent>
+
+@Body
+
+<footer class="footer width-full container-lg p-responsive">
+  <nav class="col-12 col-lg-8 pb-2 f6 mt-4 mb-2 color-fg-muted width-full">
+    <ul class="list-style-none d-flex flex-wrap col-12 flex-justify-center flex-lg-justify-between mb-2 mb-lg-0">
+      <li class="mr-3 mr-lg-0">
+        <a href="#">Imprint</a>
+      </li>
+      <li class="mr-3 mr-lg-0">
+        <a href="#">Privacy</a>
+      </li>
+      <li class="mr-3 mr-lg-0">
+        <a href="#">Github</a>
+      </li>
+        <li class="mr-3 mr-lg-0">
+            <AuthorizeView>
+                <Authorized>
+                    <a href="auth/logout">Log out</a>
+                </Authorized>
+                <NotAuthorized>
+                    <a href="auth/login?redirectUri=@Navigator.Uri">Login</a>
+                </NotAuthorized>
+            </AuthorizeView>
+        </li>
+    </ul>
+  </nav>
+</footer>
+
+@code
+{
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("populateOcticons");
+        }
+        catch (Exception e)
+        {
+            Log.Error(e, "Failed to populate octicons");
+        }
+    }
+}
