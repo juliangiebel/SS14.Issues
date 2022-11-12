@@ -18,24 +18,7 @@ public class ApplicationDbContext : DbContext
         
         modelBuilder.Entity<SyncedIssue>()
             .ToTable("syncedissue", t => t.ExcludeFromMigrations());
-        
-        modelBuilder.HasDbFunction(typeof(ApplicationDbContext).GetMethod(nameof(CreateIssueSyncTable), new[] { typeof(string) })!)
-            .HasName("createissuesynctable");
 
-        modelBuilder.HasDbFunction(typeof(ApplicationDbContext).GetMethod(nameof(InsertIntoIssueSyncTable), new[]
-            { typeof(string), typeof(int), typeof(int), typeof(string), typeof(string), typeof(string), typeof(string), typeof(Guid) })!)
-            .HasName("insertintoissuesynctable");
-        
-        modelBuilder.HasDbFunction(typeof(ApplicationDbContext).GetMethod(nameof(SwapIssueSyncTable), new[] { typeof(string) })!)
-            .HasName("swapissuesynctable");
-        
-        modelBuilder.HasDbFunction(typeof(ApplicationDbContext).GetMethod(nameof(CreateIssueTable), new[] { typeof(string) })!)
-            .HasName("createissuetable");
-
-        modelBuilder.HasDbFunction(typeof(ApplicationDbContext).GetMethod(nameof(InsertIntoIssueTable), new[]
-                { typeof(string), typeof(int), typeof(int), typeof(string), typeof(string), typeof(string), typeof(string), typeof(Guid) })!)
-            .HasName("insertintoissuetable");
-        
         modelBuilder.HasDbFunction(typeof(ApplicationDbContext).GetMethod(nameof(GetIssue), new[] { typeof(string), typeof(int) })!)
             .HasName("getissue");
         
@@ -46,20 +29,20 @@ public class ApplicationDbContext : DbContext
             .HasName("searchissues");
     }
     
-    public string CreateIssueSyncTable(string repoKey)
-        => RepoConfigs.Select(c => CreateIssueSyncTable(repoKey)).Single();
+    public void CreateIssueSyncTable(string repoKey)
+        => Database.ExecuteSqlInterpolated($"SELECT createissuesynctable({repoKey})");
     
-    public int InsertIntoIssueSyncTable(string syncTableName, int id, int number, string title, string url, string status, string excerpt, Guid repoConfigId)
-        => RepoConfigs.Select(c => InsertIntoIssueSyncTable(syncTableName, id, number, title, url, status, excerpt, repoConfigId)).Single();
+    public void InsertIntoIssueSyncTable(string repoKey, int id, int number, string title, string url, string status, string excerpt, Guid repoConfigId)
+        => Database.ExecuteSqlInterpolated($"SELECT insertintoissuesynctable({repoKey}, {id}, {number}, {title}, {url}, {status}, {excerpt}, {repoConfigId})");
+    
+    public void SwapIssueSyncTable(string repoKey)
+        => Database.ExecuteSqlInterpolated($"SELECT swapissuesynctable({repoKey})");
+    
+    public void CreateIssueTable(string repoKey)
+        => Database.ExecuteSqlInterpolated($"SELECT createissuetable({repoKey})");
 
-    public int SwapIssueSyncTable(string repoKey)
-        => RepoConfigs.Select(c => SwapIssueSyncTable(repoKey)).Single();
-    
-    public string CreateIssueTable(string repoKey)
-        => RepoConfigs.Select(c => CreateIssueTable(repoKey)).Single();
-    
-    public int InsertIntoIssueTable(string repoKey, int id, int number, string title, string url, string status, string excerpt, Guid repoConfigId)
-        => RepoConfigs.Select(c => InsertIntoIssueTable(repoKey, id, number, title, url, status, excerpt, repoConfigId)).Single();
+    public void InsertIntoIssueTable(string repoKey, int id, int number, string title, string url, string status, string excerpt, Guid repoConfigId)
+        => Database.ExecuteSqlInterpolated($"SELECT insertintoissuetable({repoKey}, {id}, {number}, {title}, {url}, {status}, {excerpt}, {repoConfigId})");
 
     public IQueryable<SyncedIssue> GetIssue(string repoKey, int issueId)
         => FromExpression(() => GetIssue(repoKey, issueId));
@@ -69,5 +52,4 @@ public class ApplicationDbContext : DbContext
 
     public IQueryable<SyncedIssue> SearchIssues(string repoKey, string term, int limit)
         => FromExpression(() => SearchIssues(repoKey, term, limit));
-
 }

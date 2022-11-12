@@ -19,11 +19,16 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace function InsertIntoIssueSyncTable(tableName text, id int, number int, title text, url text, status text, excerpt text, repoConfigId uuid) returns int as $$
+create or replace function InsertIntoIssueSyncTable(repo_key text, id int, number int, title text, url text, status text, excerpt text, repoConfigId uuid) returns int as $$
+declare
+    table_name text;
 begin
+
+    table_name = 'tmp_' || TableNameFromRepoKey(repo_key);
+
     execute format('INSERT INTO %I ("Id", "Number", "Title", "Url", "Status", "Excerpt", "RepoConfigId")' ||
                    'values (%L, %L, %L, %L, %L, %L, %L)',
-                   tableName, id, number, title, url, status, excerpt, repoConfigId);
+                   table_name, id, number, title, url, status, excerpt, repoConfigId);
     return 1;
 end;
 $$ language plpgsql;

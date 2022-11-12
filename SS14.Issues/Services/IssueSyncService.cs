@@ -27,14 +27,15 @@ public sealed class IssueSyncService
     public async Task IssueSyncTask(int installationId, string repoSearchKey, Guid repoConfigId)
     {
         //create temporary issue table for repository
-        var syncTableName = _context.CreateIssueSyncTable(repoSearchKey);
+        //var syncTableNameList = .ToList();
+        _context.CreateIssueSyncTable(repoSearchKey);
 
         //populate temporary issue table
         var enumerator = _githubApiService.IterateIssues(installationId, repoSearchKey);
         await foreach (var issue in enumerator)
         {
             var excerpt = issue.Body.Truncate(200, "...");
-            _context.InsertIntoIssueSyncTable(syncTableName, issue.Id, issue.Number, issue.Title, issue.HtmlUrl, issue.State.StringValue,
+            _context.InsertIntoIssueSyncTable(repoSearchKey, issue.Id, issue.Number, issue.Title, issue.HtmlUrl, issue.State.StringValue,
                 string.IsNullOrWhiteSpace(excerpt) ? "<!--empty-->" : excerpt, repoConfigId);
         }
         
