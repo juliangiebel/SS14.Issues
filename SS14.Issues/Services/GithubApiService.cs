@@ -92,7 +92,7 @@ public sealed class GithubApiService
         var from = DateTimeOffset.Now;
         
         Log.Information("Syncing issues for repository: {Repository}", repositorySearchKey);
-        Log.Debug("Syncing issues from date: {From}", from);
+        Log.Information("Syncing issues from date: {From}", from);
         var stopwatch = new Stopwatch();
         stopwatch.Start();
         while (true)
@@ -109,22 +109,20 @@ public sealed class GithubApiService
                     break;
                 
                 from = issues.Items[^1].CreatedAt;
-                page = 0;
+                page = -1;
                 
-                Log.Debug("Syncing issues from date: {From}", from);
-                
-                var limit = client.GetLastApiInfo().RateLimit;
-                if (limit.Remaining == 0)
-                {
-                    Log.Debug("Hit rate limit. Waiting for: {WaitTime}", limit.Reset - DateTimeOffset.Now);
-                    await Task.Delay(limit.Reset - DateTimeOffset.Now);
-                }
-                continue;
+                Log.Information("Syncing issues from date: {From}", from);
             }
                 
             page++;
-            //slow down rate requests are made at
-            await Task.Delay(10);
+            
+            var limit = client.GetLastApiInfo().RateLimit;
+            if (limit.Remaining <= 1)
+            {
+                var waitTime = limit.Reset - DateTimeOffset.Now + TimeSpan.FromSeconds(10);
+                Log.Information("Hit rate limit. Waiting for: {WaitTime}", waitTime);
+                await Task.Delay(waitTime);
+            }
         }
         stopwatch.Stop();
         Log.Information("Finished syncing issues. Time taken: {Elapsed}", stopwatch.Elapsed);
