@@ -1,5 +1,7 @@
 ﻿
+using System.Diagnostics;
 using Octokit;
+using Serilog;
 using SS14.Issues.Data.Model;
 using SS14.Issues.Exceptions;
 using SS14.Issues.Helpers;
@@ -69,7 +71,7 @@ public sealed class GithubApiService
     /// <param name="page">The current page</param>
     /// <param name="perPage">The maximum amount of items per page</param>
     /// <returns></returns>
-    public async Task<SearchIssuesResult> GetIssuesPaginated(long installationId, string repositorySearchKey, int page, int perPage)
+    public async Task<SearchIssuesResult> GetIssuesPaginated(long installationId, string repositorySearchKey, int page, int perPage, DateTimeOffset from)
     {
         var client = await _clientStore.GetInstallationClient(installationId);
         return await client.Search.SearchIssues(new SearchIssuesRequest()
@@ -77,7 +79,9 @@ public sealed class GithubApiService
             Type = IssueTypeQualifier.Issue,
             Repos = new RepositoryCollection { repositorySearchKey },
             Page = page,
-            PerPage = Math.Clamp(perPage, 0, 100)
+            PerPage = Math.Clamp(perPage, 0, 100),
+            SortField = IssueSearchSort.Created,
+            Created = new DateRange(from, SearchQualifierOperator.LessThan)
         });
     }
 
@@ -85,22 +89,45 @@ public sealed class GithubApiService
     {
         var client = await _clientStore.GetInstallationClient(installationId);
         var page = 0;
-
+        var from = DateTimeOffset.Now;
+        
+        Log.Information("Syncing issues for repository: {Repository}", repositorySearchKey);
+        Log.Debug("Syncing issues from date: {From}", from);
+        var stopwatch = new Stopwatch();
+        stopwatch.Start();
         while (true)
         {
-            var issues = await GetIssuesPaginated(installationId, repositorySearchKey, page, 100);
+            var issues = await GetIssuesPaginated(installationId, repositorySearchKey, page, 100, from);
             var links = client.GetLastApiInfo().Links;
-
+            
             foreach (var issue in issues.Items)
                 yield return issue;
-            
+
             if (!links.ContainsKey("next"))
-                break;
-            
+            {
+                if (issues.TotalCount == 0 || issues.Items.Count == 0)
+                    break;
+                
+                from = issues.Items[^1].CreatedAt;
+                page = 0;
+                
+                Log.Debug("Syncing issues from date: {From}", from);
+                
+                var limit = client.GetLastApiInfo().RateLimit;
+                if (limit.Remaining == 0)
+                {
+                    Log.Debug("Hit rate limit. Waiting for: {WaitTime}", limit.Reset - DateTimeOffset.Now);
+                    await Task.Delay(limit.Reset - DateTimeOffset.Now);
+                }
+                continue;
+            }
+                
             page++;
             //slow down rate requests are made at
             await Task.Delay(10);
         }
+        stopwatch.Stop();
+        Log.Information("Finished syncing issues. Time taken: {Elapsed}", stopwatch.Elapsed);
     }
     
     public async void CreateIssue(long installationId, long repositoryId, IssueCreationParameters issueParameters)
