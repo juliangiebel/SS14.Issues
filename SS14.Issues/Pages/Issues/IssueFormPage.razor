@@ -65,7 +65,7 @@
 
     private void HandleRepositorySelect(ChangeEventArgs args)
     {
-        if (args.Value is not string id || _repositories == null || !_repositories.TryGetValue(Guid.Parse(id), out var config))
+        if (args.Value is not string id || _repositories == null || !Guid.TryParse(id, out var guid) || !_repositories.TryGetValue(guid, out var config))
             return;
 
         _repoKey = config?.GhRepoSearchKey;
