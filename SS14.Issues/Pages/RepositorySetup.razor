@@ -4,6 +4,7 @@
 @using SS14.Issues.Data.Model
 @using SS14.Issues.Pages.Components.Forms
 @using Microsoft.EntityFrameworkCore
+@using Octokit
 @using Quartz
 @using Serilog
 @using SS14.Issues.Jobs
@@ -101,7 +102,7 @@
                     <a class="previous_page" rel="previous" href="@Navigator.Uri?page=@(Page - 1)" aria-label="Previous Page">Previous</a>
                 }
                 <span class="gap">@Page / @(_count != 0 && Limit != 0 ? _count / Limit : 0)</span>
-                @if (Page * Limit >= _count)
+                @if ((Page + 1) * Limit >= _count)
                 {
                     <span class="next_page" aria-disabled="true">Next</span>
                 }
@@ -143,7 +144,7 @@
 
     [Parameter]
     [SupplyParameterFromQuery(Name = "limit")]
-    public int Limit { get; set; } = 0;
+    public int Limit { get; set; } = 20;
 
     private bool _showForm = false;
     private List<RepoConfig>? _configs;
@@ -152,8 +153,10 @@
 
     protected override async Task OnInitializedAsync()
     {
+        Limit = Limit > 0 ? Limit : 20; 
+
         _count = await DbContext.RepoConfigs.CountAsync();
-        _configs = await DbContext.RepoConfigs.OrderBy(c => c.Id).Skip(0).Take(20).ToListAsync();
+        _configs = await DbContext.RepoConfigs.OrderBy(c => c.Id).Skip(Page).Take(Limit).ToListAsync();
     }
 
     private void HandleNewConfigurationClick()
@@ -169,7 +172,7 @@
         DbContext.SaveChanges();
         _showForm = false;
         _count = DbContext.RepoConfigs.Count();
-        _configs = DbContext.RepoConfigs.OrderBy(c => c.Id).Skip(0).Take(20).ToList();
+        _configs = DbContext.RepoConfigs.OrderBy(c => c.Id).Skip(Page).Take(Limit).ToList();
         StateHasChanged();
     }
 
@@ -191,7 +194,7 @@
         }
 
         _count = await DbContext.RepoConfigs.CountAsync();
-        _configs = await DbContext.RepoConfigs.OrderBy(c => c.Id).Skip(0).Take(20).ToListAsync();
+        _configs = await DbContext.RepoConfigs.OrderBy(c => c.Id).Skip(Page).Take(Limit).ToListAsync();
         StateHasChanged();
     }
 
